@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  compilar-y-probar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      # Formato (ktlint), las pruebas comunes en JVM y en Android, las de interfaz de escritorio, lint de Android y
+      # la app de Android y de escritorio.
+      - name: Verificar
+        run: ./gradlew --no-configuration-cache spotlessCheck allTests :androidApp:lintDebug :androidApp:assembleDebug :desktopApp:packageDistributionForCurrentOS
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: surtidor
+          path: |
+            androidApp/build/outputs/apk/debug/*.apk
+            desktopApp/build/compose/binaries/main/deb/*.deb
+          retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: informes
+          path: |
+            shared/build/reports/
+            androidApp/build/reports/
+          retention-days: 7
+
+  repositorio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Sin rutas locales ni correos personales
+        run: |
+          if git grep -nIiE '([a-z]:[\/]+users[\/]|/home/[a-z0-9_-]+/|@(gmail|hotmail|outlook|yahoo)\.)'; then
+            echo "Hay datos personales en el repositorio" && exit 1
+          fi
