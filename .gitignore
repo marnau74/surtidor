@@ -1,0 +1,19 @@
+# Gradle y Kotlin
+.gradle/
+.kotlin/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+local.properties
+
+# Android
+*.apk
+*.aab
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Editores y sistema
+.idea/
+*.iml
+.vscode/
+.DS_Store
