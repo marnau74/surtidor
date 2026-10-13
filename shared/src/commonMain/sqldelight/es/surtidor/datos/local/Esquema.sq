@@ -1,0 +1,118 @@
+-- Gasolineras: los datos fijos de cada una (se actualizan con cada descarga).
+CREATE TABLE gasolinera (
+    id INTEGER NOT NULL PRIMARY KEY,
+    provincia_id TEXT NOT NULL,
+    rotulo TEXT NOT NULL,
+    direccion TEXT NOT NULL,
+    municipio TEXT NOT NULL,
+    localidad TEXT NOT NULL,
+    codigo_postal TEXT NOT NULL,
+    latitud REAL,
+    longitud REAL,
+    horario TEXT NOT NULL
+);
+
+CREATE INDEX gasolinera_provincia ON gasolinera (provincia_id);
+
+-- Precios por día (fecha en ISO, AAAA-MM-DD): el de hoy y el histórico que se va guardando.
+CREATE TABLE precio (
+    gasolinera_id INTEGER NOT NULL,
+    carburante TEXT NOT NULL,
+    fecha TEXT NOT NULL,
+    precio REAL NOT NULL,
+    PRIMARY KEY (gasolinera_id, carburante, fecha)
+);
+
+-- Qué días de cada provincia están descargados y cuándo los publicó el Ministerio (instante en milisegundos).
+CREATE TABLE descarga (
+    provincia_id TEXT NOT NULL,
+    fecha TEXT NOT NULL,
+    publicado_en INTEGER NOT NULL,
+    descargado_en INTEGER NOT NULL,
+    PRIMARY KEY (provincia_id, fecha)
+);
+
+CREATE TABLE provincia (
+    id TEXT NOT NULL PRIMARY KEY,
+    nombre TEXT NOT NULL
+);
+
+CREATE TABLE favorita (
+    gasolinera_id INTEGER NOT NULL PRIMARY KEY,
+    carburante TEXT NOT NULL,
+    umbral REAL,
+    ultimo_precio_avisado REAL
+);
+
+CREATE TABLE ajuste (
+    clave TEXT NOT NULL PRIMARY KEY,
+    valor TEXT NOT NULL
+);
+
+guardarGasolinera:
+INSERT OR REPLACE INTO gasolinera VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+guardarPrecio:
+INSERT OR REPLACE INTO precio VALUES (?, ?, ?, ?);
+
+borrarPreciosDelDia:
+DELETE FROM precio
+WHERE fecha = :fecha AND gasolinera_id IN (SELECT id FROM gasolinera WHERE provincia_id = :provinciaId);
+
+guardarDescarga:
+INSERT OR REPLACE INTO descarga VALUES (?, ?, ?, ?);
+
+ultimaDescarga:
+SELECT * FROM descarga WHERE provincia_id = ? ORDER BY fecha DESC LIMIT 1;
+
+ultimaDescargaGlobal:
+SELECT max(descargado_en) AS ultima FROM descarga;
+
+diasDescargados:
+SELECT fecha FROM descarga WHERE provincia_id = ? AND fecha >= ?;
+
+gasolinerasDeProvincia:
+SELECT * FROM gasolinera WHERE provincia_id = ?;
+
+gasolinerasPorId:
+SELECT * FROM gasolinera WHERE id IN ?;
+
+preciosDelDia:
+SELECT p.* FROM precio p JOIN gasolinera g ON g.id = p.gasolinera_id
+WHERE g.provincia_id = ? AND p.fecha = ?;
+
+ultimosPreciosDe:
+SELECT * FROM precio
+WHERE gasolinera_id IN ? AND fecha = (SELECT max(fecha) FROM precio p2 WHERE p2.gasolinera_id = precio.gasolinera_id);
+
+historico:
+SELECT fecha, precio FROM precio
+WHERE gasolinera_id = ? AND carburante = ? AND fecha >= ?
+ORDER BY fecha;
+
+borrarPreciosAntiguos:
+DELETE FROM precio WHERE fecha < ?;
+
+guardarProvincia:
+INSERT OR REPLACE INTO provincia VALUES (?, ?);
+
+provincias:
+SELECT * FROM provincia ORDER BY nombre;
+
+favoritas:
+SELECT * FROM favorita;
+
+guardarFavorita:
+INSERT OR REPLACE INTO favorita VALUES (?, ?, ?, ?);
+
+borrarFavorita:
+DELETE FROM favorita WHERE gasolinera_id = ?;
+
+anotarAviso:
+UPDATE favorita SET ultimo_precio_avisado = ? WHERE gasolinera_id = ?;
+
+leerAjuste:
+SELECT valor FROM ajuste WHERE clave = ?;
+
+guardarAjuste:
+INSERT OR REPLACE INTO ajuste VALUES (?, ?);
