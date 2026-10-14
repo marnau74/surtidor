@@ -29,7 +29,10 @@ class RepositorioTest {
     private val reloj = RelojDePrueba(Instant.parse("2026-10-13T18:00:00Z"))
     private var fallar = false
 
-    /** Responde los precios actuales y, para el histórico, la muestra del 1 de octubre salvo el día 2 (falla). */
+    /**
+     * Responde los precios actuales y, para el histórico, la muestra del 1 de octubre salvo el día 2 (falla) y el 12
+     * (llega vacío, como un día que el Ministerio aún no ha publicado).
+     */
     private val ministerio =
         MinisterioSimulado { peticion ->
             val ruta = peticion.url.encodedPath
@@ -40,6 +43,10 @@ class RepositorioTest {
 
                 ruta.contains("Hist/FiltroProvincia/02-10-2026") -> {
                     json("", HttpStatusCode.InternalServerError)
+                }
+
+                ruta.contains("Hist/FiltroProvincia/12-10-2026") -> {
+                    json("""{"Fecha":"12/10/2026 0:00:00","ListaEESSPrecio":[]}""")
                 }
 
                 ruta.contains("Hist/FiltroProvincia/") -> {
@@ -108,19 +115,20 @@ class RepositorioTest {
             val g = repo.gasolinerasDeProvinciaAhora("30").first { it.id == 4149L }
             val historico = repo.historico(g, Carburante.GASOLEO_A, dias = 30)
 
-            // Los precios de hoy (al refrescar) y los 29 días anteriores, del 14 de septiembre al 12 de octubre: 28 bien
-            // y el 2 de octubre, que falla, con sus dos reintentos.
+            // Los precios de hoy (al refrescar) y los 29 días anteriores, del 14 de septiembre al 12 de octubre: 27 bien,
+            // el 12 vacío y el 2 de octubre, que falla, con sus dos reintentos.
             assertEquals(1 + 28 + 3, ministerio.peticiones.size)
             assertTrue(LocalDate(2026, 10, 2) !in historico.map { it.fecha }, "el día que falló no se inventa")
-            assertEquals(29, historico.size)
+            assertTrue(LocalDate(2026, 10, 12) !in historico.map { it.fecha })
+            assertEquals(28, historico.size)
             assertEquals(LocalDate(2026, 10, 13), historico.last().fecha)
 
             val antes = ministerio.peticiones.size
             repo.historico(g, Carburante.GASOLEO_A, dias = 30)
             assertEquals(
-                antes + 3,
+                antes + 3 + 1,
                 ministerio.peticiones.size,
-                "la segunda vez solo se vuelve a pedir el día que falló",
+                "la segunda vez solo se vuelven a pedir el día que falló y el que llegó vacío",
             )
         }
 

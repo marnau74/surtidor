@@ -13,6 +13,7 @@ import es.surtidor.dominio.Provincia
 import es.surtidor.dominio.Resumen
 import es.surtidor.dominio.ordenar
 import es.surtidor.dominio.resumir
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -62,6 +63,7 @@ class ListaViewModel(
     private val seleccion = MutableStateFlow(Seleccion())
     private val refresco = MutableStateFlow(Refresco(cargando = true))
     private val provincias = MutableStateFlow<List<Provincia>>(emptyList())
+    private var refrescoEnCurso: Job? = null
 
     private val datos =
         seleccion
@@ -105,17 +107,20 @@ class ListaViewModel(
 
     fun refrescar(forzar: Boolean = false) {
         val provincia = seleccion.value.provinciaId ?: return
-        viewModelScope.launch {
-            refresco.value = Refresco(cargando = true)
-            refresco.value =
-                try {
-                    repositorio.refrescar(provincia, forzar)
-                    if (provincias.value.isEmpty()) provincias.value = repositorio.provincias()
-                    Refresco()
-                } catch (e: ErrorDeRed) {
-                    Refresco(error = e.message)
-                }
-        }
+        // Si se cambia de provincia a media descarga, la anterior ya no importa: que no pise el estado de la nueva.
+        refrescoEnCurso?.cancel()
+        refrescoEnCurso =
+            viewModelScope.launch {
+                refresco.value = Refresco(cargando = true)
+                refresco.value =
+                    try {
+                        repositorio.refrescar(provincia, forzar)
+                        if (provincias.value.isEmpty()) provincias.value = repositorio.provincias()
+                        Refresco()
+                    } catch (e: ErrorDeRed) {
+                        Refresco(error = e.message)
+                    }
+            }
     }
 
     fun elegirProvincia(id: String) {

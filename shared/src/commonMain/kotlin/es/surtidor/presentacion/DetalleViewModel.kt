@@ -91,11 +91,15 @@ class DetalleViewModel(
         }
     }
 
-    /** Avisar cuando el precio del carburante elegido baje de [umbral] (nulo: sin aviso). */
+    /**
+     * Avisar cuando el precio del carburante de la favorita baje de [umbral] (nulo: sin aviso). Es el carburante que
+     * enseña la tarjeta del aviso, aunque en la ficha se esté mirando otro.
+     */
     fun fijarUmbral(umbral: Double?) {
         val actual = _estado.value
+        val carburante = actual.favorita?.carburante ?: actual.carburante
         viewModelScope.launch {
-            repositorio.guardarFavorita(Favorita(gasolineraId, actual.carburante, umbral?.takeIf { it > 0 }))
+            repositorio.guardarFavorita(Favorita(gasolineraId, carburante, umbral?.takeIf { it > 0 }))
         }
     }
 

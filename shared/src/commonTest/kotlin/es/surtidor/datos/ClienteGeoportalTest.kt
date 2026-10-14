@@ -59,4 +59,11 @@ class ClienteGeoportalTest {
             val ministerio = MinisterioSimulado { json("<html>Mantenimiento</html>") }
             assertFailsWith<ErrorDeRed> { ministerio.cliente.preciosActuales("30") }
         }
+
+    @Test
+    fun unaFechaConOtroFormatoEsUnErrorDeRedYNoUnFallo() =
+        runTest {
+            val ministerio = MinisterioSimulado { json("""{"Fecha":"2026-10-13T19:45:20","ListaEESSPrecio":[]}""") }
+            assertFailsWith<ErrorDeRed> { ministerio.cliente.preciosActuales("30") }
+        }
 }

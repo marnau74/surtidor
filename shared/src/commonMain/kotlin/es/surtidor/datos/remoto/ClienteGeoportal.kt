@@ -26,11 +26,12 @@ class ErrorDeRed(
 class ClienteGeoportal(
     private val http: HttpClient,
 ) {
-    suspend fun provincias(): List<Provincia> = pedir<List<ProvinciaDto>>("Listados/Provincias/").map { it.aDominio() }
+    suspend fun provincias(): List<Provincia> =
+        pedir<List<ProvinciaDto>>("Listados/Provincias/").let { leer { it.map { p -> p.aDominio() } } }
 
     /** Los precios actuales de una provincia (código INE de dos cifras). */
     suspend fun preciosActuales(provinciaId: String): PreciosPublicados =
-        pedir<RespuestaDto>("EstacionesTerrestres/FiltroProvincia/$provinciaId").aDominio()
+        pedir<RespuestaDto>("EstacionesTerrestres/FiltroProvincia/$provinciaId").let { leer { it.aDominio() } }
 
     /** Los precios que había un día pasado. */
     suspend fun preciosDelDia(
@@ -38,7 +39,9 @@ class ClienteGeoportal(
         dia: LocalDate,
     ): PreciosPublicados {
         val fecha = "${dos(dia.day)}-${dos(dia.month.ordinal + 1)}-${dia.year}"
-        return pedir<RespuestaDto>("EstacionesTerrestresHist/FiltroProvincia/$fecha/$provinciaId").aDominio()
+        return pedir<RespuestaDto>("EstacionesTerrestresHist/FiltroProvincia/$fecha/$provinciaId").let {
+            leer { it.aDominio() }
+        }
     }
 
     private suspend inline fun <reified T> pedir(ruta: String): T {
@@ -61,6 +64,16 @@ class ClienteGeoportal(
             throw ErrorDeRed("La respuesta del Ministerio no tiene el formato esperado", e)
         }
     }
+
+    /** Una fecha con otro formato no tumba la app: es un error de la respuesta, como un JSON mal formado. */
+    private inline fun <T> leer(convertir: () -> T): T =
+        try {
+            convertir()
+        } catch (e: IllegalArgumentException) {
+            throw ErrorDeRed("La respuesta del Ministerio no tiene el formato esperado", e)
+        } catch (e: IndexOutOfBoundsException) {
+            throw ErrorDeRed("La respuesta del Ministerio no tiene el formato esperado", e)
+        }
 
     private fun dos(n: Int) = n.toString().padStart(2, '0')
 

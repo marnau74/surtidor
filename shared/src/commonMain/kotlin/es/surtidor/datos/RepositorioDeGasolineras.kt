@@ -127,6 +127,8 @@ class RepositorioDeGasolineras(
                     }
                 }.awaitAll()
                 .filterNotNull()
+                // Un día que el Ministerio aún no tiene publicado llega vacío: no se apunta como descargado.
+                .filter { (_, publicados) -> publicados.gasolineras.isNotEmpty() }
                 .forEach { (dia, publicados) ->
                     withContext(
                         io,

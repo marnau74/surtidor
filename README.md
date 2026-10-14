@@ -83,7 +83,7 @@ Decisiones con sus alternativas en [docs/adr](docs/adr).
 ./gradlew spotlessCheck allTests :androidApp:lintDebug
 ```
 
-Con eso pasan 44 pruebas en escritorio y 38 en Android.
+Con eso pasan 46 pruebas en escritorio y 40 en Android.
 
 ## Ejecutarlo
 
