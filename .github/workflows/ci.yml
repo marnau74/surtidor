@@ -22,14 +22,14 @@ jobs:
       # la app de Android y de escritorio.
       - name: Verificar
         run: ./gradlew --no-configuration-cache spotlessCheck allTests :androidApp:lintDebug :androidApp:assembleDebug :desktopApp:packageDistributionForCurrentOS
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: surtidor
           path: |
             androidApp/build/outputs/apk/debug/*.apk
             desktopApp/build/compose/binaries/main/deb/*.deb
           retention-days: 14
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: informes
