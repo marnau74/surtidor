@@ -3,6 +3,15 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones con
 [versionado semántico](https://semver.org/lang/es/).
 
+## [0.1.1] - 2026-10-15
+
+### Añadido
+
+- APK de Android firmado, para descargar desde
+  [Releases](https://github.com/marnau74/surtidor/releases/latest).
+- Firma de la versión publicada leída de un `keystore.properties` fuera del repositorio
+  (o de la ruta en `SURTIDOR_FIRMA`); sin él, el APK de release sale sin firmar.
+
 ## [0.1.0] - 2026-10-13
 
 Primera versión.

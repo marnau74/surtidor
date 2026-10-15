@@ -1,7 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
 }
+
+// Firma de la versión publicada: las claves no están en el repositorio. Se leen de un fichero
+// keystore.properties (storeFile, storePassword, keyAlias, keyPassword) en la raíz o en la ruta
+// de SURTIDOR_FIRMA. Sin él, el APK de release sale sin firmar.
+val firma =
+    (System.getenv("SURTIDOR_FIRMA")?.let(::File) ?: rootProject.file("keystore.properties"))
+        .takeIf { it.isFile }
+        ?.let { f -> Properties().apply { f.inputStream().use(::load) } }
 
 android {
     namespace = "es.surtidor.android"
@@ -20,12 +30,24 @@ android {
             libs.versions.android.targetSdk
                 .get()
                 .toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
+    }
+
+    signingConfigs {
+        if (firma != null) {
+            create("publicada") {
+                storeFile = file(firma.getProperty("storeFile"))
+                storePassword = firma.getProperty("storePassword")
+                keyAlias = firma.getProperty("keyAlias")
+                keyPassword = firma.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
+            if (firma != null) signingConfig = signingConfigs.getByName("publicada")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

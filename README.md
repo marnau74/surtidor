@@ -17,6 +17,8 @@ Todas las capturas son de datos reales del 13 de octubre de 2026. La de Android 
 app descargando en vivo; las otras se generan pintando las pantallas con los precios de la provincia de Murcia de
 ese día y sus 30 días anteriores (ver [Capturas](#capturas)).
 
+> **In English.** Android and desktop app showing fuel prices at every petrol station in Spain (official Ministry data): cheapest nearby or in your province, 30-day price history and an alert when a favourite station drops below your price. Kotlin Multiplatform with Compose Multiplatform shares domain, data, presentation logic and UI across platforms; works offline. A signed APK is available in Releases.
+
 ## Qué hace
 
 - **Lista** de las gasolineras de una provincia que venden el carburante elegido (gasolina 95 y 98, gasóleo A y
@@ -84,6 +86,12 @@ Decisiones con sus alternativas en [docs/adr](docs/adr).
 ```
 
 Con eso pasan 46 pruebas en escritorio y 40 en Android.
+
+## Descargar
+
+El APK de Android está en [Releases](https://github.com/marnau74/surtidor/releases/latest) (Android 8.0 o
+posterior). Al no venir de Google Play, Android pide permitir la instalación desde el navegador o el gestor de
+archivos.
 
 ## Ejecutarlo
 

@@ -17,3 +17,8 @@ captures/
 *.iml
 .vscode/
 .DS_Store
+
+# Firma de la versión publicada (nunca al repositorio)
+keystore.properties
+*.jks
+*.keystore
